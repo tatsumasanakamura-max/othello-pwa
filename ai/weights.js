@@ -1,0 +1,41 @@
+(function () {
+  'use strict';
+
+  const POSITION_WEIGHTS = [
+    [120, -20, 20, 5, 5, 20, -20, 120],
+    [-20, -40, -5, -5, -5, -5, -40, -20],
+    [20, -5, 15, 3, 3, 15, -5, 20],
+    [5, -5, 3, 3, 3, 3, -5, 5],
+    [5, -5, 3, 3, 3, 3, -5, 5],
+    [20, -5, 15, 3, 3, 15, -5, 20],
+    [-20, -40, -5, -5, -5, -5, -40, -20],
+    [120, -20, 20, 5, 5, 20, -20, 120],
+  ];
+
+  window.OthelloAIWeights = Object.freeze({
+    POSITION_WEIGHTS,
+    CORNER_WEIGHT: 1000,
+    EDGE_WEIGHT: 80,
+    STABLE_WEIGHT: 120,
+    MOBILITY_WEIGHT: 25,
+    FRONTIER_WEIGHT: -12,
+    PIECE_WEIGHT: 2,
+    EARLY_MOBILITY_MULTIPLIER: 1.4,
+    EARLY_POSITION_MULTIPLIER: 0.8,
+    EARLY_PIECE_MULTIPLIER: 0.15,
+    MID_MOBILITY_MULTIPLIER: 1.0,
+    MID_POSITION_MULTIPLIER: 1.15,
+    MID_PIECE_MULTIPLIER: 0.35,
+    LATE_MOBILITY_MULTIPLIER: 0.45,
+    LATE_POSITION_MULTIPLIER: 0.75,
+    LATE_PIECE_MULTIPLIER: 1.7,
+    LEVEL4_DEPTH_EARLY: 4,
+    LEVEL4_DEPTH_MID: 5,
+    LEVEL4_DEPTH_LATE: 5,
+    LEVEL4_TIME_LIMIT_MS: 950,
+    LEVEL5_DEPTH_LIMIT: 8,
+    LEVEL5_TIME_LIMIT_MS: 1000,
+    LEVEL5_ENDGAME_TIME_LIMIT_MS: 2000,
+    ENDGAME_SOLVE_THRESHOLD: 10,
+  });
+}());

@@ -40,8 +40,15 @@
             <div class="difficulty-grid" role="group" aria-label="CPU難易度">
               <button class="choice-button is-selected" type="button" data-level="easy">かんたん</button>
               <button class="choice-button" type="button" data-level="normal">ふつう</button>
-              <button class="choice-button" type="button" data-level="hard">つよい</button>
+              <button class="choice-button" type="button" data-level="strong">つよい</button>
+              <button class="choice-button" type="button" data-level="expert">エキスパート</button>
+              <button class="choice-button" type="button" data-level="master">マスター</button>
             </div>
+          </div>
+
+          <div class="menu-section">
+            <p class="menu-heading">デバッグ</p>
+            <button class="small-button" id="debugToggleButton" type="button" aria-pressed="false">デバッグモード: OFF</button>
           </div>
 
           <button class="big-button big-button--primary" id="cpuStartButton">CPU対戦をはじめる</button>
@@ -63,7 +70,7 @@
 
           <div class="status-row">
             <div class="status-pill" id="turnLabel">黒の手番</div>
-            <div class="status-pill status-pill--accent" id="thinkingLabel" hidden>考え中...</div>
+            <div class="status-pill status-pill--accent" id="thinkingLabel" hidden>考え中…</div>
           </div>
 
           <div class="control-row">
@@ -80,12 +87,23 @@
         <section class="message panel" aria-live="polite">
           <p id="messageText">黒からスタートします。</p>
         </section>
+
+        <section class="debug-panel panel" id="debugPanel" hidden aria-label="デバッグ情報">
+          <h2>デバッグ情報</h2>
+          <pre id="debugInfo">未計測</pre>
+        </section>
       </section>
     </main>
   </div>
 
   <div class="celebration-layer" id="celebrationLayer" aria-hidden="true"></div>
 
+  <script src="ai/weights.js"></script>
+  <script src="ai/transposition.js"></script>
+  <script src="ai/openingBook.js"></script>
+  <script src="ai/evaluation.js"></script>
+  <script src="ai/minimax.js"></script>
+  <script src="ai/search.js"></script>
   <script src="ai.js"></script>
   <script src="script.js"></script>
 </body>

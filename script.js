@@ -14,6 +14,8 @@
   const turnLabelElement = document.getElementById('turnLabel');
   const thinkingLabelElement = document.getElementById('thinkingLabel');
   const messageTextElement = document.getElementById('messageText');
+  const debugPanelElement = document.getElementById('debugPanel');
+  const debugInfoElement = document.getElementById('debugInfo');
   const celebrationLayer = document.getElementById('celebrationLayer');
 
   const twoPlayerButton = document.getElementById('twoPlayerButton');
@@ -21,6 +23,7 @@
   const resetButton = document.getElementById('resetButton');
   const rematchButton = document.getElementById('rematchButton');
   const backToMenuButton = document.getElementById('backToMenuButton');
+  const debugToggleButton = document.getElementById('debugToggleButton');
   const sideButtons = Array.from(document.querySelectorAll('[data-side]'));
   const levelButtons = Array.from(document.querySelectorAll('[data-level]'));
 
@@ -34,9 +37,12 @@
     thinking: false,
     pendingCpuTimer: null,
     lastAction: null,
+    lastSearchInfo: null,
+    moveHistory: [],
     cells: [],
     winnerCelebrated: false,
     winner: null,
+    debugMode: false,
   };
 
   function createInitialBoard() {
@@ -79,6 +85,11 @@
 
     for (const button of levelButtons) {
       button.classList.toggle('is-selected', button.dataset.level === state.cpuLevel);
+    }
+
+    if (debugToggleButton) {
+      debugToggleButton.setAttribute('aria-pressed', String(state.debugMode));
+      debugToggleButton.textContent = state.debugMode ? 'デバッグモード: ON' : 'デバッグモード: OFF';
     }
   }
 
@@ -128,6 +139,8 @@
     state.gameOver = false;
     state.thinking = false;
     state.lastAction = null;
+    state.lastSearchInfo = null;
+    state.moveHistory = [];
     state.winnerCelebrated = false;
     state.winner = null;
     syncMenuSelection();
@@ -152,6 +165,8 @@
     state.gameOver = false;
     state.lastAction = null;
     state.winner = null;
+    state.lastSearchInfo = null;
+    state.moveHistory = [];
     syncMenuSelection();
     setScreen(false);
     renderMenuMessage();
@@ -213,6 +228,7 @@
       placed: { row: move.row, col: move.col },
       flipped: move.flips.map(([row, col]) => ({ row, col })),
     };
+    state.moveHistory.push(`${move.row},${move.col}`);
     state.turn = opposite(color);
     state.thinking = false;
     state.gameOver = false;
@@ -271,7 +287,23 @@
         return;
       }
 
-      const move = OthelloGameAI.chooseMove(state.board, cpuColor, state.cpuLevel);
+      const result = OthelloGameAI.chooseMove(state.board, cpuColor, state.cpuLevel, {
+        history: state.moveHistory,
+        debug: state.debugMode,
+      });
+
+      state.lastSearchInfo = result && result.debug ? result.debug : {
+        depth: result ? result.depth : 0,
+        score: result ? result.score : 0,
+        nodes: result ? result.nodes : 0,
+        timeMs: result ? result.timeMs : 0,
+        reason: result ? result.reason : '',
+        candidates: result && result.candidates
+          ? result.candidates.slice(0, 5).map((item) => `${item.move}:${Math.round(item.score)}`).join(' / ')
+          : '',
+      };
+
+      const move = result ? result.move : null;
       if (!move) {
         state.thinking = false;
         handleTurnFlow();
@@ -399,6 +431,34 @@
     whiteCountElement.textContent = String(white);
   }
 
+  function renderDebugPanel() {
+    if (!debugPanelElement || !debugInfoElement) {
+      return;
+    }
+
+    if (!state.debugMode) {
+      debugPanelElement.hidden = true;
+      return;
+    }
+
+    debugPanelElement.hidden = false;
+
+    if (!state.lastSearchInfo) {
+      debugInfoElement.textContent = '未計測';
+      return;
+    }
+
+    const info = state.lastSearchInfo;
+    debugInfoElement.textContent = [
+      `探索深さ: ${info.depth || 0}`,
+      `評価値: ${Math.round(info.score || 0)}`,
+      `候補手: ${info.candidates || 'なし'}`,
+      `探索ノード数: ${info.nodes || 0}`,
+      `思考時間(ms): ${info.timeMs || 0}`,
+      `採用理由: ${info.reason || 'unknown'}`,
+    ].join('\n');
+  }
+
   function renderStatus() {
     if (!state.mode) {
       renderMenuMessage();
@@ -434,6 +494,7 @@
     renderScores();
     renderStatus();
     updateBoardView();
+    renderDebugPanel();
 
     if (state.gameOver && state.winner) {
       markWinnerStones(state.winner);
@@ -458,6 +519,14 @@
       button.addEventListener('click', () => {
         state.cpuLevel = button.dataset.level || 'easy';
         syncMenuSelection();
+      });
+    }
+
+    if (debugToggleButton) {
+      debugToggleButton.addEventListener('click', () => {
+        state.debugMode = !state.debugMode;
+        syncMenuSelection();
+        render();
       });
     }
 
