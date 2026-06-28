@@ -4,7 +4,6 @@
   const BOARD_SIZE = 8;
   const BLACK = 'black';
   const WHITE = 'white';
-  const CPU_COLOR = WHITE;
   const THINKING_DELAY = 500;
 
   const menuScreen = document.getElementById('menuScreen');
@@ -25,6 +24,7 @@
   const state = {
     mode: null,
     cpuLevel: 'easy',
+    humanColor: BLACK,
     board: createInitialBoard(),
     turn: BLACK,
     gameOver: false,
@@ -97,14 +97,19 @@
     return state.mode === 'cpu';
   }
 
-  function isCpuTurn() {
-    return isCpuGame() && state.turn === CPU_COLOR && !state.gameOver;
+  function getCpuColor() {
+    return opposite(state.humanColor);
   }
 
-  function startGame(mode, cpuLevel) {
+  function isCpuTurn() {
+    return isCpuGame() && state.turn === getCpuColor() && !state.gameOver;
+  }
+
+  function startGame(mode, cpuLevel, humanColor) {
     clearCpuTimer();
     state.mode = mode;
     state.cpuLevel = cpuLevel || state.cpuLevel;
+    state.humanColor = humanColor || BLACK;
     state.board = createInitialBoard();
     state.turn = BLACK;
     state.gameOver = false;
@@ -112,6 +117,9 @@
     state.lastAction = null;
     state.winnerCelebrated = false;
     state.winner = null;
+    if (state.mode === 'cpu' && state.humanColor === WHITE) {
+      state.turn = BLACK;
+    }
     setScreen(true);
     render();
     handleTurnFlow();
@@ -244,13 +252,14 @@
     state.pendingCpuTimer = window.setTimeout(() => {
       state.pendingCpuTimer = null;
 
-      if (state.gameOver || state.turn !== CPU_COLOR) {
+      const cpuColor = getCpuColor();
+      if (state.gameOver || state.turn !== cpuColor) {
         state.thinking = false;
         render();
         return;
       }
 
-      const move = OthelloGameAI.chooseMove(state.board, CPU_COLOR, state.cpuLevel);
+      const move = OthelloGameAI.chooseMove(state.board, cpuColor, state.cpuLevel);
       if (!move) {
         state.thinking = false;
         handleTurnFlow();
@@ -258,7 +267,7 @@
       }
 
       state.thinking = false;
-      playMove(move, CPU_COLOR);
+      playMove(move, cpuColor);
     }, THINKING_DELAY);
   }
 
@@ -400,7 +409,9 @@
       if (isCpuTurn()) {
         messageTextElement.textContent = 'CPU\u304c\u8003\u3048\u3066\u3044\u307e\u3059\u3002';
       } else if (state.mode === 'cpu') {
-        messageTextElement.textContent = '\u3042\u306a\u305f\u306f\u9ed2\u3067\u3059\u3002\u7f6e\u3051\u308b\u5834\u6240\u3092\u9078\u3093\u3067\u304f\u3060\u3055\u3044\u3002';
+        messageTextElement.textContent = state.humanColor === BLACK
+          ? '\u3042\u306a\u305f\u306f\u9ed2\u3067\u3059\u3002\u7f6e\u3051\u308b\u5834\u6240\u3092\u9078\u3093\u3067\u304f\u3060\u3055\u3044\u3002'
+          : '\u3042\u306a\u305f\u306f\u767d\u3067\u3059\u3002CPU\u306e\u5f8c\u3001\u7f6e\u3051\u308b\u5834\u6240\u3092\u9078\u3093\u3067\u304f\u3060\u3055\u3044\u3002';
       } else {
         messageTextElement.textContent = `${formatPlayer(state.turn)}\u306e\u756a\u3067\u3059\u3002`;
       }
@@ -422,7 +433,7 @@
 
     document.querySelectorAll('[data-mode="cpu"]').forEach((button) => {
       button.addEventListener('click', () => {
-        startGame('cpu', button.dataset.level || 'easy');
+        startGame('cpu', button.dataset.level || 'easy', button.dataset.humanColor || BLACK);
       });
     });
 
