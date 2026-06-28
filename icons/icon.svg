@@ -1,0 +1,38 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="96" y1="64" x2="416" y2="448" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#b97c44"/>
+      <stop offset="1" stop-color="#7a4a24"/>
+    </linearGradient>
+    <radialGradient id="shine" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(160 120) rotate(45) scale(260 220)">
+      <stop stop-color="#ffffff" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadow" x="72" y="72" width="368" height="368" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#321b08" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <rect x="36" y="36" width="440" height="440" rx="92" fill="url(#shine)"/>
+  <g filter="url(#shadow)">
+    <rect x="88" y="88" width="336" height="336" rx="42" fill="#2e7f44"/>
+    <g opacity="0.22" stroke="#ffffff" stroke-width="4">
+      <path d="M112 152H400"/>
+      <path d="M112 208H400"/>
+      <path d="M112 264H400"/>
+      <path d="M112 320H400"/>
+      <path d="M112 376H400"/>
+      <path d="M152 112V400"/>
+      <path d="M208 112V400"/>
+      <path d="M264 112V400"/>
+      <path d="M320 112V400"/>
+      <path d="M376 112V400"/>
+    </g>
+    <circle cx="208" cy="208" r="56" fill="url(#shine)"/>
+    <circle cx="304" cy="304" r="56" fill="url(#shine)"/>
+    <circle cx="256" cy="256" r="46" fill="#111111"/>
+    <circle cx="208" cy="304" r="46" fill="#f4f4f4"/>
+    <circle cx="304" cy="208" r="46" fill="#111111"/>
+    <circle cx="352" cy="256" r="46" fill="#f4f4f4"/>
+  </g>
+</svg>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#2f6b3e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="オセロ">
+  <meta name="format-detection" content="telephone=no, email=no, address=no">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+  <title>オセロ</title>
+</head>
+<body>
+  <div class="app-shell">
+    <main class="app" id="app">
+      <section class="screen screen--menu is-active" id="menuScreen" aria-label="対戦モード選択">
+        <div class="hero">
+          <p class="eyebrow">スマホ最優先のオセロ</p>
+          <h1>オセロ</h1>
+          <p class="lead">二人対戦か、CPU対戦を選んでください。</p>
+        </div>
+
+        <div class="panel mode-panel">
+          <button class="big-button big-button--primary" id="twoPlayerButton">二人対戦</button>
+
+          <div class="cpu-options">
+            <button class="big-button" data-mode="cpu" data-level="easy">コンピュータ対戦 かんたん</button>
+            <button class="big-button" data-mode="cpu" data-level="normal">コンピュータ対戦 ふつう</button>
+            <button class="big-button" data-mode="cpu" data-level="hard">コンピュータ対戦 つよい</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="gameScreen" aria-label="ゲーム画面" hidden>
+        <header class="topbar panel">
+          <div class="scoreboard">
+            <div class="score-card score-card--black">
+              <span class="score-label">黒</span>
+              <strong id="blackCount">2</strong>
+            </div>
+            <div class="score-card score-card--white">
+              <span class="score-label">白</span>
+              <strong id="whiteCount">2</strong>
+            </div>
+          </div>
+
+          <div class="status-row">
+            <div class="status-pill" id="turnLabel">黒の手番</div>
+            <div class="status-pill status-pill--accent" id="thinkingLabel" hidden>考え中...</div>
+          </div>
+
+          <div class="control-row">
+            <button class="small-button" id="resetButton">リセット</button>
+            <button class="small-button" id="rematchButton">もう一度遊ぶ</button>
+            <button class="small-button" id="backToMenuButton">モード選択</button>
+          </div>
+        </header>
+
+        <section class="board-shell panel">
+          <div class="board" id="board" aria-label="8x8オセロ盤"></div>
+        </section>
+
+        <section class="message panel" aria-live="polite">
+          <p id="messageText">黒からスタートします。</p>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div class="celebration-layer" id="celebrationLayer" aria-hidden="true"></div>
+
+  <script src="ai.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
