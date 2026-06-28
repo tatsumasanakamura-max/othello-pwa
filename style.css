@@ -106,16 +106,40 @@ h1 {
 .mode-panel {
   padding: 18px;
   display: grid;
-  gap: 14px;
+  gap: 16px;
 }
 
-.cpu-options {
+.menu-section {
   display: grid;
   gap: 10px;
 }
 
+.menu-heading {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+.segmented-control,
+.difficulty-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.segmented-control {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.difficulty-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .big-button,
-.small-button {
+.small-button,
+.segmented-control__button,
+.choice-button {
   border: 0;
   border-radius: 18px;
   min-height: 56px;
@@ -133,8 +157,20 @@ h1 {
   font-weight: 700;
 }
 
+.segmented-control__button,
+.choice-button {
+  min-height: 52px;
+  font-weight: 700;
+  box-shadow: 0 8px 18px rgba(92, 62, 24, 0.10);
+}
+
 .big-button--primary {
   background: linear-gradient(180deg, #fff0ba 0%, #f1b44c 100%);
+}
+
+.segmented-control__button,
+.choice-button {
+  background: linear-gradient(180deg, #fffdf6 0%, #f0dfb0 100%);
 }
 
 .small-button {
@@ -144,9 +180,17 @@ h1 {
 }
 
 .big-button:active,
-.small-button:active {
+.small-button:active,
+.segmented-control__button:active,
+.choice-button:active {
   transform: translateY(2px) scale(0.99);
   box-shadow: 0 4px 10px rgba(92, 62, 24, 0.12);
+}
+
+.segmented-control__button.is-selected,
+.choice-button.is-selected {
+  background: linear-gradient(180deg, #fff1be 0%, #efb94d 100%);
+  box-shadow: 0 10px 20px rgba(123, 80, 20, 0.16);
 }
 
 .topbar {
@@ -415,8 +459,15 @@ h1 {
   }
 
   .big-button,
-  .small-button {
+  .small-button,
+  .segmented-control__button,
+  .choice-button {
     border-radius: 16px;
+  }
+
+  .segmented-control,
+  .difficulty-grid {
+    gap: 8px;
   }
 }
 

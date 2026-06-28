@@ -17,9 +17,12 @@
   const celebrationLayer = document.getElementById('celebrationLayer');
 
   const twoPlayerButton = document.getElementById('twoPlayerButton');
+  const cpuStartButton = document.getElementById('cpuStartButton');
   const resetButton = document.getElementById('resetButton');
   const rematchButton = document.getElementById('rematchButton');
   const backToMenuButton = document.getElementById('backToMenuButton');
+  const sideButtons = Array.from(document.querySelectorAll('[data-side]'));
+  const levelButtons = Array.from(document.querySelectorAll('[data-level]'));
 
   const state = {
     mode: null,
@@ -67,6 +70,16 @@
   function setScreen(showGame) {
     menuScreen.hidden = showGame;
     gameScreen.hidden = !showGame;
+  }
+
+  function syncMenuSelection() {
+    for (const button of sideButtons) {
+      button.classList.toggle('is-selected', button.dataset.side === state.humanColor);
+    }
+
+    for (const button of levelButtons) {
+      button.classList.toggle('is-selected', button.dataset.level === state.cpuLevel);
+    }
   }
 
   function setupBoardGrid() {
@@ -117,9 +130,7 @@
     state.lastAction = null;
     state.winnerCelebrated = false;
     state.winner = null;
-    if (state.mode === 'cpu' && state.humanColor === WHITE) {
-      state.turn = BLACK;
-    }
+    syncMenuSelection();
     setScreen(true);
     render();
     handleTurnFlow();
@@ -130,7 +141,7 @@
       return;
     }
 
-    startGame(state.mode, state.cpuLevel);
+    startGame(state.mode, state.cpuLevel, state.humanColor);
   }
 
   function returnToMenu() {
@@ -141,6 +152,7 @@
     state.gameOver = false;
     state.lastAction = null;
     state.winner = null;
+    syncMenuSelection();
     setScreen(false);
     renderMenuMessage();
     render();
@@ -431,11 +443,23 @@
   function bindEvents() {
     twoPlayerButton.addEventListener('click', () => startGame('two', null));
 
-    document.querySelectorAll('[data-mode="cpu"]').forEach((button) => {
-      button.addEventListener('click', () => {
-        startGame('cpu', button.dataset.level || 'easy', button.dataset.humanColor || BLACK);
-      });
+    cpuStartButton.addEventListener('click', () => {
+      startGame('cpu', state.cpuLevel, state.humanColor);
     });
+
+    for (const button of sideButtons) {
+      button.addEventListener('click', () => {
+        state.humanColor = button.dataset.side || BLACK;
+        syncMenuSelection();
+      });
+    }
+
+    for (const button of levelButtons) {
+      button.addEventListener('click', () => {
+        state.cpuLevel = button.dataset.level || 'easy';
+        syncMenuSelection();
+      });
+    }
 
     resetButton.addEventListener('click', restartCurrentGame);
     rematchButton.addEventListener('click', restartCurrentGame);
@@ -458,6 +482,7 @@
     setupBoardGrid();
     bindEvents();
     registerServiceWorker();
+    syncMenuSelection();
     setScreen(false);
     renderMenuMessage();
     render();

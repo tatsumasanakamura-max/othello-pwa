@@ -27,17 +27,24 @@
         <div class="panel mode-panel">
           <button class="big-button big-button--primary" id="twoPlayerButton">二人対戦</button>
 
-          <div class="cpu-options">
-            <button class="big-button" data-mode="cpu" data-level="easy" data-human-color="black">コンピュータ対戦 かんたん・先手（黒）</button>
-            <button class="big-button" data-mode="cpu" data-level="normal" data-human-color="black">コンピュータ対戦 ふつう・先手（黒）</button>
-            <button class="big-button" data-mode="cpu" data-level="hard" data-human-color="black">コンピュータ対戦 つよい・先手（黒）</button>
+          <div class="menu-section">
+            <p class="menu-heading">CPU対戦の手番</p>
+            <div class="segmented-control" role="group" aria-label="CPU対戦の手番">
+              <button class="segmented-control__button is-selected" type="button" data-side="black">先手（黒）</button>
+              <button class="segmented-control__button" type="button" data-side="white">後手（白）</button>
+            </div>
           </div>
 
-          <div class="cpu-options cpu-options--secondary">
-            <button class="big-button" data-mode="cpu" data-level="easy" data-human-color="white">コンピュータ対戦 かんたん・後手（白）</button>
-            <button class="big-button" data-mode="cpu" data-level="normal" data-human-color="white">コンピュータ対戦 ふつう・後手（白）</button>
-            <button class="big-button" data-mode="cpu" data-level="hard" data-human-color="white">コンピュータ対戦 つよい・後手（白）</button>
+          <div class="menu-section">
+            <p class="menu-heading">CPU難易度</p>
+            <div class="difficulty-grid" role="group" aria-label="CPU難易度">
+              <button class="choice-button is-selected" type="button" data-level="easy">かんたん</button>
+              <button class="choice-button" type="button" data-level="normal">ふつう</button>
+              <button class="choice-button" type="button" data-level="hard">つよい</button>
+            </div>
           </div>
+
+          <button class="big-button big-button--primary" id="cpuStartButton">CPU対戦をはじめる</button>
         </div>
       </section>
 
