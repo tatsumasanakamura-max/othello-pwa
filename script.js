@@ -306,6 +306,26 @@
     const nextColor = opposite(passedColor);
     const nextMoves = getLegalMoves(state.board, nextColor);
     const actor = formatActor(passedColor);
+
+    if (nextMoves.length === 0) {
+      state.thinking = false;
+      state.passActive = false;
+      state.passMessage = '';
+      clearCpuTimer();
+      clearPassTimer();
+      clearLastActionTimer();
+      state.lastAction = null;
+      state.gameOver = true;
+      state.lastSearchInfo = state.debugMode ? {
+        ...(state.lastSearchInfo || {}),
+        reason: `game-over:no-legal-moves:${actor}`,
+        candidates: '双方合法手なし',
+      } : state.lastSearchInfo;
+      render();
+      finishGame();
+      return;
+    }
+
     const nextText = nextMoves.length > 0
       ? `次は${formatPlayer(nextColor)}の手番です`
       : '相手も置ける場所がないためゲーム終了です';
@@ -327,14 +347,6 @@
       state.passTimer = null;
       state.passActive = false;
       state.passMessage = '';
-
-      if (nextMoves.length === 0) {
-        state.gameOver = true;
-        clearCpuTimer();
-        render();
-        finishGame();
-        return;
-      }
 
       state.turn = nextColor;
       render();
@@ -425,6 +437,12 @@
   }
 
   function finishGame() {
+    clearCpuTimer();
+    clearPassTimer();
+    state.thinking = false;
+    state.passActive = false;
+    state.passMessage = '';
+
     const { black, white } = countStones(state.board);
     let resultText = `\u5f15\u304d\u5206\u3051\u3067\u3059\u3002${black}\u5bfe${white}`;
     let winner = null;
@@ -546,6 +564,12 @@
     ].join('\n');
   }
 
+  function renderControls() {
+    resetButton.disabled = false;
+    rematchButton.disabled = false;
+    backToMenuButton.disabled = false;
+  }
+
   function renderPassOverlay() {
     if (!passOverlayElement || !passOverlayTextElement) {
       return;
@@ -600,6 +624,7 @@
     renderScores();
     renderStatus();
     updateBoardView();
+    renderControls();
     renderDebugPanel();
 
     if (state.gameOver && state.winner) {
