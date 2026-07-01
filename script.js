@@ -16,6 +16,8 @@
   const messageTextElement = document.getElementById('messageText');
   const debugPanelElement = document.getElementById('debugPanel');
   const debugInfoElement = document.getElementById('debugInfo');
+  const passOverlayElement = document.getElementById('passOverlay');
+  const passOverlayTextElement = document.getElementById('passOverlayText');
   const celebrationLayer = document.getElementById('celebrationLayer');
 
   const twoPlayerButton = document.getElementById('twoPlayerButton');
@@ -35,8 +37,12 @@
     turn: BLACK,
     gameOver: false,
     thinking: false,
+    passActive: false,
+    passTimer: null,
+    passMessage: '',
     pendingCpuTimer: null,
     lastAction: null,
+    lastActionTimer: null,
     lastSearchInfo: null,
     moveHistory: [],
     cells: [],
@@ -70,6 +76,20 @@
     if (state.pendingCpuTimer !== null) {
       window.clearTimeout(state.pendingCpuTimer);
       state.pendingCpuTimer = null;
+    }
+  }
+
+  function clearPassTimer() {
+    if (state.passTimer !== null) {
+      window.clearTimeout(state.passTimer);
+      state.passTimer = null;
+    }
+  }
+
+  function clearLastActionTimer() {
+    if (state.lastActionTimer !== null) {
+      window.clearTimeout(state.lastActionTimer);
+      state.lastActionTimer = null;
     }
   }
 
@@ -129,8 +149,22 @@
     return isCpuGame() && state.turn === getCpuColor() && !state.gameOver;
   }
 
+  function isHumanColor(color) {
+    return !isCpuGame() || color === state.humanColor;
+  }
+
+  function formatActor(color) {
+    if (!isCpuGame()) {
+      return formatPlayer(color);
+    }
+
+    return isHumanColor(color) ? `あなた（${formatPlayer(color)}）` : `CPU（${formatPlayer(color)}）`;
+  }
+
   function startGame(mode, cpuLevel, humanColor) {
     clearCpuTimer();
+    clearPassTimer();
+    clearLastActionTimer();
     state.mode = mode;
     state.cpuLevel = cpuLevel || state.cpuLevel;
     state.humanColor = humanColor || BLACK;
@@ -138,6 +172,8 @@
     state.turn = BLACK;
     state.gameOver = false;
     state.thinking = false;
+    state.passActive = false;
+    state.passMessage = '';
     state.lastAction = null;
     state.lastSearchInfo = null;
     state.moveHistory = [];
@@ -159,9 +195,13 @@
 
   function returnToMenu() {
     clearCpuTimer();
+    clearPassTimer();
+    clearLastActionTimer();
     state.mode = null;
     state.turn = BLACK;
     state.thinking = false;
+    state.passActive = false;
+    state.passMessage = '';
     state.gameOver = false;
     state.lastAction = null;
     state.winner = null;
@@ -208,7 +248,7 @@
   }
 
   function onCellClick(event) {
-    if (isCpuTurn() || state.gameOver || state.thinking) {
+    if (isCpuTurn() || state.gameOver || state.thinking || state.passActive) {
       return;
     }
 
@@ -223,11 +263,16 @@
   }
 
   function playMove(move, color) {
+    clearLastActionTimer();
     state.board = applyMove(state.board, move, color);
     state.lastAction = {
       placed: { row: move.row, col: move.col },
       flipped: move.flips.map(([row, col]) => ({ row, col })),
     };
+    state.lastActionTimer = window.setTimeout(() => {
+      state.lastAction = null;
+      state.lastActionTimer = null;
+    }, 650);
     state.moveHistory.push(`${move.row},${move.col}`);
     state.turn = opposite(color);
     state.thinking = false;
@@ -237,43 +282,71 @@
   }
 
   function handleTurnFlow() {
-    if (state.gameOver) {
+    if (state.gameOver || state.passActive) {
       return;
     }
 
-    let passes = 0;
-
-    while (passes < 2) {
-      const legalMoves = getLegalMoves(state.board, state.turn);
-      if (legalMoves.length > 0) {
+    const legalMoves = getLegalMoves(state.board, state.turn);
+    if (legalMoves.length > 0) {
+      render();
+      if (isCpuTurn()) {
+        scheduleCpuMove();
+      } else {
+        state.thinking = false;
         render();
-        if (isCpuTurn()) {
-          scheduleCpuMove();
-        } else {
-          state.thinking = false;
-          render();
-        }
+      }
+      return;
+    }
+
+    handlePass();
+  }
+
+  function handlePass() {
+    const passedColor = state.turn;
+    const nextColor = opposite(passedColor);
+    const nextMoves = getLegalMoves(state.board, nextColor);
+    const actor = formatActor(passedColor);
+    const nextText = nextMoves.length > 0
+      ? `次は${formatPlayer(nextColor)}の手番です`
+      : '相手も置ける場所がないためゲーム終了です';
+
+    clearPassTimer();
+    state.thinking = false;
+    state.passActive = true;
+    clearLastActionTimer();
+    state.lastAction = null;
+    state.passMessage = `${actor}は置ける場所がないためパス。${nextText}`;
+    state.lastSearchInfo = state.debugMode ? {
+      ...(state.lastSearchInfo || {}),
+      reason: `pass:${actor}`,
+      candidates: '合法手なし',
+    } : state.lastSearchInfo;
+    render();
+
+    state.passTimer = window.setTimeout(() => {
+      state.passTimer = null;
+      state.passActive = false;
+      state.passMessage = '';
+
+      if (nextMoves.length === 0) {
+        state.gameOver = true;
+        clearCpuTimer();
+        render();
+        finishGame();
         return;
       }
 
-      const passedColor = state.turn;
-      state.turn = opposite(state.turn);
-      state.thinking = false;
-      state.lastAction = null;
-      passes += 1;
+      state.turn = nextColor;
       render();
-      messageTextElement.textContent = `${formatPlayer(passedColor)}\u306f\u7f6e\u3051\u308b\u5834\u6240\u304c\u306a\u3044\u305f\u3081\u30d1\u30b9\u3067\u3059\u3002`;
-    }
-
-    state.gameOver = true;
-    state.thinking = false;
-    clearCpuTimer();
-    render();
-    finishGame();
+      handleTurnFlow();
+    }, 1400);
   }
 
   function scheduleCpuMove() {
     clearCpuTimer();
+    if (state.passActive) {
+      return;
+    }
     state.thinking = true;
     render();
 
@@ -281,7 +354,7 @@
       state.pendingCpuTimer = null;
 
       const cpuColor = getCpuColor();
-      if (state.gameOver || state.turn !== cpuColor) {
+      if (state.gameOver || state.passActive || state.turn !== cpuColor) {
         state.thinking = false;
         render();
         return;
@@ -381,9 +454,12 @@
     const legalMoves = state.gameOver ? [] : getLegalMoves(state.board, state.turn);
     const legalMap = new Set(legalMoves.map((move) => `${move.row},${move.col}`));
     const lastAction = state.lastAction;
-    const flipMap = new Set(
-      lastAction ? lastAction.flipped.map((item) => `${item.row},${item.col}`) : [],
-    );
+    const flipIndexMap = new Map();
+    if (lastAction) {
+      lastAction.flipped.forEach((item, index) => {
+        flipIndexMap.set(`${item.row},${item.col}`, index);
+      });
+    }
     const placedKey = lastAction ? `${lastAction.placed.row},${lastAction.placed.col}` : null;
 
     for (const cell of state.cells) {
@@ -392,8 +468,8 @@
       const value = state.board[row][col];
       const key = `${row},${col}`;
 
-      cell.classList.toggle('cell--legal', legalMap.has(key) && !state.gameOver && !state.thinking);
-      cell.disabled = state.gameOver || state.thinking || !legalMap.has(key);
+      cell.classList.toggle('cell--legal', legalMap.has(key) && !state.gameOver && !state.thinking && !state.passActive);
+      cell.disabled = state.gameOver || state.thinking || state.passActive || !legalMap.has(key);
 
       let stone = cell.querySelector('.stone');
 
@@ -410,19 +486,30 @@
         cell.appendChild(stone);
       }
 
+      if (!stone.querySelector('.stone-core')) {
+        stone.innerHTML = '<div class="stone-core"><span class="stone-face stone-face--front"></span><span class="stone-face stone-face--back"></span></div>';
+      }
+
       stone.classList.remove('stone--black', 'stone--white', 'stone--new', 'stone--flip', 'stone--winner');
+      stone.style.removeProperty('--flip-delay');
       stone.classList.add(value === BLACK ? 'stone--black' : 'stone--white');
+      stone.dataset.front = value;
+      stone.dataset.back = value;
 
       if (placedKey === key) {
         stone.classList.add('stone--new');
-      } else if (flipMap.has(key)) {
+      } else if (flipIndexMap.has(key)) {
+        const previousValue = opposite(value);
+        stone.dataset.front = previousValue;
+        stone.dataset.back = value;
+        stone.style.setProperty('--flip-delay', `${flipIndexMap.get(key) * 45}ms`);
         stone.classList.add('stone--flip');
+      } else {
+        stone.dataset.front = value;
+        stone.dataset.back = value;
       }
     }
 
-    if (lastAction) {
-      state.lastAction = null;
-    }
   }
 
   function renderScores() {
@@ -459,25 +546,44 @@
     ].join('\n');
   }
 
-  function renderStatus() {
-    if (!state.mode) {
-      renderMenuMessage();
-      turnLabelElement.textContent = '\u9ed2\u306e\u624b\u756a';
-      thinkingLabelElement.hidden = true;
+  function renderPassOverlay() {
+    if (!passOverlayElement || !passOverlayTextElement) {
       return;
     }
 
+    passOverlayElement.hidden = !state.passActive;
+    passOverlayTextElement.textContent = state.passActive ? state.passMessage : '';
+  }
+
+  function renderTurnLabel() {
     if (state.gameOver) {
       turnLabelElement.textContent = state.winner
         ? `${formatPlayer(state.winner)}\u306e\u52dd\u3061`
         : '\u30b2\u30fc\u30e0\u7d42\u4e86';
-    } else {
-      turnLabelElement.textContent = `${formatPlayer(state.turn)}\u306e\u624b\u756a`;
+      return;
     }
 
-    thinkingLabelElement.hidden = !state.thinking;
+    const colorClass = state.turn === BLACK ? 'turn-dot--black' : 'turn-dot--white';
+    turnLabelElement.innerHTML = `<span class="turn-indicator"><span class="turn-dot ${colorClass}" aria-hidden="true"></span>${formatPlayer(state.turn)}の手番</span>`;
+  }
 
-    if (!state.gameOver) {
+  function renderStatus() {
+    if (!state.mode) {
+      renderMenuMessage();
+      turnLabelElement.innerHTML = '<span class="turn-indicator"><span class="turn-dot turn-dot--black" aria-hidden="true"></span>黒の手番</span>';
+      thinkingLabelElement.hidden = true;
+      renderPassOverlay();
+      return;
+    }
+
+    renderTurnLabel();
+
+    thinkingLabelElement.hidden = !state.thinking || state.passActive || state.gameOver;
+    renderPassOverlay();
+
+    if (state.passActive) {
+      messageTextElement.textContent = state.passMessage;
+    } else if (!state.gameOver) {
       if (isCpuTurn()) {
         messageTextElement.textContent = 'CPU\u304c\u8003\u3048\u3066\u3044\u307e\u3059\u3002';
       } else if (state.mode === 'cpu') {
